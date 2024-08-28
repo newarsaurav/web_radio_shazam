@@ -1,0 +1,5 @@
+pip install shazamio
+pip install pyaudio
+pip install pydub
+
+install ffmpeg
