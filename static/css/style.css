@@ -1,0 +1,244 @@
+*{
+    box-sizing: border-box;
+}
+.main_content {
+    width: 100vw;
+    min-height: 100vh;
+    background-color: antiquewhite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.font-size-6em{
+    font-size: 6em;
+}
+
+/* Slider container */
+.relative {
+    position: relative;
+}
+
+/* Slider buttons */
+button {
+    cursor: pointer;
+}
+
+/* Hide default scrollbar */
+.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+}
+
+.card {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+.number-overlay {
+    position: absolute;
+    top: 10px;  /* Adjust as needed */
+    right: 10px;  /* Adjust as needed */
+    background-color: rgba(0, 0, 0, 0.5);  /* Semi-transparent black */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 50%;
+    font-size: 1.5rem;  /* Adjust as needed */
+    font-weight: bold;
+    text-align: center;
+    width: 40px;  /* Adjust as needed */
+    height: 40px;  /* Adjust as needed */
+    line-height: 30px;  /* Adjust as needed to center text vertically */
+}
+
+.main_content {
+    width: 100vw;
+    min-height: 100vh;
+    background-color: antiquewhite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+/* Navigation Bar Styles */
+nav {
+    width: 100%;
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #ddd;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.375rem;
+    transition: transform 0.3s ease-in-out;
+}
+
+.btn-success {
+    background-color: #38a169;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #e53e3e;
+    color: white;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+/* Card Styles */
+.card {
+    background-color: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.card-subtitle {
+    color: #4a5568;
+}
+
+.current-recognition {
+    border-top: 1px solid #e2e8f0;
+    background-color: #f7fafc;
+}
+
+
+
+
+
+
+/* ----------Button start style----------------  */
+section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px;
+    padding: 30px;
+}
+button.playBtn {
+    width: 80px;
+    height: 80px;
+    background-color: #e1434b;
+    border-radius: 100%;
+    border: #fff solid 2px;
+    position: relative;
+    cursor: pointer;
+}
+.a_animation {
+    animation: shadowPulse 1s infinite linear;
+}
+
+button.playBtn::before {
+    position: absolute;
+    content: '';
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+/* Play state */
+button.playBtn.play::before {
+    border-top: transparent 15px solid;
+    border-bottom: transparent 15px solid;
+    border-left: #fff 25px solid;
+    transform: translate(-40%, -50%);
+}
+
+/* Pause state */
+button.playBtn.pause::before {
+    width: 25px;
+    height: 30px;
+    background: 
+        linear-gradient(to right, #fff 0%, #fff 35%, transparent 35%, transparent 65%, #fff 65%, #fff 100%);
+}
+
+button.playBtn::after {
+    position: absolute;
+    content: '';
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: #fff solid 2px;
+    border-radius: 100%;
+}
+
+@keyframes ringPulse {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    80%, 100% {
+        opacity: 0;
+        transform: scale(2);
+    }
+}
+
+@keyframes shadowPulse {
+    0% {
+        box-shadow: 0 0 8px 6px transparent,
+                    0 0 0 0 transparent,
+                    0 0 0 0 transparent;
+    }
+
+    10% {
+        box-shadow: 0 0 8px 6px #e1434b,    
+                    0 0 12px 10px transparent,
+                    0 0 12px 5px #e1434b;
+    }
+
+    80%, 100% {
+        box-shadow: 0 0 8px 6px transparent,
+                    0 0 0 40px transparent,
+                    0 0 0 40px transparent;
+    }
+}
+/* ----------Button end style----------------  */

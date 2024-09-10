@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+   .p-40 h1{
+      padding: 40px;
+   }
+</style>
+<div style="display:flex; justify-content: center; align-items: center;text-align: center;margin: 20px">
+    <div class="p-40" >
+        <h1>Recorder</h1>
+        <button class="mic-toggle btn btn-primary" id="mic">
+            mic
+        </button>
+        <button id="download" class="btn btn-secondary">Download</button>
+        <audio class="playback" controls></audio>
+    </div>
+    <!-- https://www.youtube.com/watch?v=3OnMBtOyGkY -->
+</div>
+<script src="{{url_for('static' , filename='js/recorder.js')}}"></script>
+{% endblock %}

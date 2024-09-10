@@ -1,76 +1,38 @@
 from flask import Flask, render_template, jsonify, request , Response
 import asyncio
 import csv
-from datetime import datetime
 from shazamio import Shazam
-import pyaudio
-import wave
+import time
 import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
-
 import json
 from datetime import datetime, timedelta
 app = Flask(__name__)
 
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 44100
+UPLOAD_FOLDER = 'static/upload_partial_wav'
+ALLOWED_EXTENSIONS = {'wav'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 details = {}
 is_listening = False
 stop_listening = False
 current_details_song = ''
 
-async def find_song():
-    global details, is_listening, stop_listening,current_details_song
+async def find_song(file_path):
+    global details,current_details_song
     shazam = Shazam()
-
-    p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
-
-    print("Listening...")
-    frames = []
-    is_listening = True
-    while not stop_listening:
-        for i in range(0, int(RATE / CHUNK * 10)):  # Adjust RECORD_SECONDS dynamically
-            data = stream.read(CHUNK)
-            frames.append(data)
-
-        # Write the accumulated data to a temporary WAV file
-        wf = wave.open('temp.wav', 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
-        wf.close()
-
-        # Use the temporary WAV file for recognition
-        out = await shazam.recognize('temp.wav')
-        if out.get("track"):
-            details = out
-            current_details_song = out           
-            save_to_csv_and_database(details['track']['title'], details['track']['subtitle'],details)
-        
-        # Reset the frames list for the next iteration
-        frames = []
-        
-
-    # Cleanup
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-
-    # Remove temporary file
-    if os.path.exists('temp.wav'):
-        os.remove('temp.wav')
-
-    is_listening = False
+    out = await shazam.recognize(file_path)
+    if out.get("track"):
+        details = out
+        current_details_song = out           
+        save_to_csv_and_database(details['track']['title'], details['track']['subtitle'],details)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return out  
+    else:
+        return None
     
     
 # Configure the database URI
@@ -182,7 +144,7 @@ def save_to_csv_and_database(title, artist, details):
     db.session.add(add_repeated_music)
     db.session.commit()
 
-    with open('song_history.csv', mode='a', newline='') as csv_file:
+    with open('static/song_history.csv', mode='a', newline='') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow([unique_international_code, timestamp, title, sub_title, artist,song_played,  album_title_single, released_year_single,bg_image, shazam_link, raw_data_json])
 
@@ -191,19 +153,26 @@ def save_to_csv_and_database(title, artist, details):
 def index():
     return render_template('index.html')
 
-@app.route('/start', methods=['POST'])
-def start():
-    global stop_listening
-    stop_listening = False
-    asyncio.run(find_song())
-    return jsonify({"status": "Listening started"})
+@app.route('/recorder')
+def recorder():
+    return render_template('recorder.html')
 
-@app.route('/stop', methods=['POST'])
-def stop():
-    global stop_listening
-    stop_listening = True
-    return jsonify({"status": "Listening stopped"})
-
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    if file:
+        # file.save(r'static/upload_partial_wav' + file.filename)  
+        file_path = os.path.join('static', 'upload_partial_wav', file.filename)
+        file.save(file_path)  
+        # file.save(r'static/upload_partial_wav' + file.filename)  
+        print(f"received at{time.time()}")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        data = loop.run_until_complete(find_song(file_path))
+        if data:
+            return jsonify(data)
+        else:
+            return jsonify({'data' : False})
 
 @app.route('/subscribe' , methods = ['GET' , 'POST'])
 def subscribe():
@@ -214,13 +183,6 @@ def subscribe():
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writerow({'email': email_sub})
     return Response('Successfully Subscribed')
-
-@app.route('/current_song', methods=['GET'])
-def current_song():
-    global current_details_song
-    if current_details_song:
-        return jsonify(current_details_song['track'])
-    return jsonify({})
 
 
 @app.route('/recent_songs', methods=['GET'])
@@ -242,7 +204,13 @@ def recent_songs():
 def top_3():
     top_tracks = MusicRepeatedDetails.query.order_by(MusicRepeatedDetails.music_repeated_played.desc()).limit(3).all()
     unique_international_codes = [track.unique_international_code for track in top_tracks]
-    songs = SongData.query.filter(SongData.unique_international_code.in_(unique_international_codes)).limit(3).all()
+    
+    distinct_songs = []
+    for i in unique_international_codes:
+        data = SongData.query.filter_by(unique_international_code=i).first()
+        if data:  # Make sure data is not None before appending
+            distinct_songs.append(data)
+
     top_songs = [
         {
             'title': song.title,
@@ -253,9 +221,10 @@ def top_3():
             'shazam_link': song.shazam_link,
             'timestamp': song.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             'play_count': next((track.music_repeated_played for track in top_tracks if track.unique_international_code == song.unique_international_code), 0)
-        } for song in songs
+        } for song in distinct_songs
     ]
-
     return jsonify(top_songs)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0',ssl_context = 'adhoc')
