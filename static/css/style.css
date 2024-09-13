@@ -1,6 +1,7 @@
-*{
+* {
     box-sizing: border-box;
 }
+
 .main_content {
     width: 100vw;
     min-height: 100vh;
@@ -11,7 +12,7 @@
     flex-wrap: wrap;
 }
 
-.font-size-6em{
+.font-size-6em {
     font-size: 6em;
 }
 
@@ -40,18 +41,25 @@ button {
 
 .number-overlay {
     position: absolute;
-    top: 10px;  /* Adjust as needed */
-    right: 10px;  /* Adjust as needed */
-    background-color: rgba(0, 0, 0, 0.5);  /* Semi-transparent black */
+    top: 10px;
+    /* Adjust as needed */
+    right: 10px;
+    /* Adjust as needed */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Semi-transparent black */
     color: white;
     padding: 5px 10px;
     border-radius: 50%;
-    font-size: 1.5rem;  /* Adjust as needed */
+    font-size: 1.5rem;
+    /* Adjust as needed */
     font-weight: bold;
     text-align: center;
-    width: 40px;  /* Adjust as needed */
-    height: 40px;  /* Adjust as needed */
-    line-height: 30px;  /* Adjust as needed to center text vertically */
+    width: 40px;
+    /* Adjust as needed */
+    height: 40px;
+    /* Adjust as needed */
+    line-height: 30px;
+    /* Adjust as needed to center text vertically */
 }
 
 .main_content {
@@ -157,6 +165,7 @@ section {
     margin: 30px;
     padding: 30px;
 }
+
 button.playBtn {
     width: 80px;
     height: 80px;
@@ -166,6 +175,7 @@ button.playBtn {
     position: relative;
     cursor: pointer;
 }
+
 .a_animation {
     animation: shadowPulse 1s infinite linear;
 }
@@ -191,7 +201,7 @@ button.playBtn.play::before {
 button.playBtn.pause::before {
     width: 25px;
     height: 30px;
-    background: 
+    background:
         linear-gradient(to right, #fff 0%, #fff 35%, transparent 35%, transparent 65%, #fff 65%, #fff 100%);
 }
 
@@ -216,7 +226,8 @@ button.playBtn::after {
         opacity: 1;
     }
 
-    80%, 100% {
+    80%,
+    100% {
         opacity: 0;
         transform: scale(2);
     }
@@ -225,20 +236,40 @@ button.playBtn::after {
 @keyframes shadowPulse {
     0% {
         box-shadow: 0 0 8px 6px transparent,
-                    0 0 0 0 transparent,
-                    0 0 0 0 transparent;
+            0 0 0 0 transparent,
+            0 0 0 0 transparent;
     }
 
     10% {
-        box-shadow: 0 0 8px 6px #e1434b,    
-                    0 0 12px 10px transparent,
-                    0 0 12px 5px #e1434b;
+        box-shadow: 0 0 8px 6px #e1434b,
+            0 0 12px 10px transparent,
+            0 0 12px 5px #e1434b;
     }
 
-    80%, 100% {
+    80%,
+    100% {
         box-shadow: 0 0 8px 6px transparent,
-                    0 0 0 40px transparent,
-                    0 0 0 40px transparent;
+            0 0 0 40px transparent,
+            0 0 0 40px transparent;
     }
 }
+
 /* ----------Button end style----------------  */
+
+
+/* @media only screen and (max-width: 575px) { 
+    .cust_table_style {
+        background-color: green;
+        overflow: scroll !important;
+        padding: 10px;
+        width: 100%;
+    }
+
+    .cust_table_style table {
+        width: 50px;
+        overflow: scroll;
+        
+      
+    }
+
+} */

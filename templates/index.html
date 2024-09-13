@@ -1,36 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-
-
-<div class="main_content">
+<div class="main_content" style="overflow: auto;">
     <div class="text-center flex flex-col md:flex-row md:justify-center items-center gap-4">
         <div>
             <h1 class="mb-4 text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900">
                 Music Recognition App
             </h1>
-
-            <section >
+            <section>
                 <button class="playBtn play" id="toggle-btn"></button>
             </section>
-           
-            <!-- <div class="flex flex-col md:flex-row md:justify-center gap-4">
-                <section>
-                    <button class="playBtn" id="start-btn"></a>
-                </section>
-                <button id="stop-btn" class="btn btn-danger px-6 py-3 text-lg md:text-xl rounded-lg transition duration-300 ease-in-out transform hover:scale-105" disabled>
-                    Stop Listening
-                </button>
-            </div> -->
-            <div class="flex flex-row justify-center p-4 gap-4">
-                <p class="p-4 hover:bg-gray-100 font-bold"><a href="#top_3_list">Top 3</a></p>
-                <p class="p-4 hover:bg-gray-100 font-bold" ><a href="#recent_songs_played">Recent Songs</a></p>
-    
+            <!-- <div class="flex flex-row justify-center p-4 gap-4 sm:flex-row"> -->
+            <div class="block sm:flex sm:flex-row justify-center p-4 gap-4">
+                <p class="p-4 hover:bg-gray-100 font-bold">
+                    <a href="#details_table">Details table</a>
+                </p>
+                <p class="p-4 hover:bg-gray-100 font-bold">
+                    <a href="#top_3_list">Top 3</a>
+                </p>
+                <p class="p-4 hover:bg-gray-100 font-bold">
+                    <a href="#recent_songs_played">Recent Songs</a>
+                </p>
             </div>
         </div>
         <div id="song-card" style="display: none;">
-            <div class="max-w-sm rounded overflow-hidden shadow-lg m-6 relative bg-white" >
+            <div class="max-w-sm rounded overflow-hidden shadow-lg m-6 relative bg-white">
                 <div class="card">
                     <img
                         id="song-image"
@@ -50,27 +44,40 @@
                         <h4 id="song-artist" class="card-subtitle text-gray-600 mb-3"></h4>
                     </div>
                 </div>
-                <!-- <div class="current-recognition p-4 border-t border-gray-200 bg-gray-50 mt-4">
-                    <h3 class="text-lg font-semibold mb-2">Current Recognition</h3>
-                </div> -->
             </div>
-            
         </div>
-       
+    </div>
+</div>
+<div class="" id="details_table" style="overflow: auto;">
+    <div class="container mt-5 ">
+        <h3 class="text-center font-bold text-5xl mb-4">Details about the recent songs payed.</h3>
+        <div style="float: right;"><a href="{{ url_for('download_csv') }}" class="btn btn-secondary">Download CSV</a></div>
+        <div style="clear:right;"></div>
+        <div id="detail-table-backend" class=" cust_table_style flex flex-wrap -mx-6 justify-center items-center" style="padding-bottom: 40px;">
+            <table class="table table-striped " style="margin:10px;border-radius: 10px; overflow: hidden;box-shadow: 0px 0 41px -17px;">
+                <thead>
+                    <tr>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">DATE</th>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">TITLE</th>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">AUTHOR</th>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">START TIME</th>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">END TIME</th>
+                        <th scope="col" style="font-family: 'Lato', sans-serif;background: #becbe8;text-align: center;">Duration</th>
+                    </tr>
+                </thead>
+                <tbody id="table_song_data"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 <div class="container mt-5" id="top_3_list">
     <h3 class="text-center font-bold text-5xl mb-4">Top 3 Most Played Music</h3>
     <div id="top-3-list" class="flex flex-wrap -mx-6 justify-center items-center">
         <!-- Top 3 songs will be appended here --></div>
-    
 </div>
 <div class="container mt-5" id="recent_songs_played">
-   
     <h3 class="text-center font-bold text-5xl mb-4">Recent Played Songs</h3>
     <div id="recent-songs-list" class="flex flex-wrap -mx-6 justify-center items-center">
         <!-- Recent songs will be appended here --></div>
-   
 </div>
-
 {% endblock %}

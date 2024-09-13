@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request , Response
+from flask import Flask, render_template, jsonify, request , Response ,send_file, session
 import asyncio
 import csv
 from shazamio import Shazam
@@ -9,8 +9,9 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 import json
 from datetime import datetime, timedelta
+from io import StringIO
 app = Flask(__name__)
-
+app.secret_key = 'this_is_the_secret_key_for_my_shazam_web_app'
 UPLOAD_FOLDER = 'static/upload_partial_wav'
 ALLOWED_EXTENSIONS = {'wav'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -19,9 +20,10 @@ details = {}
 is_listening = False
 stop_listening = False
 current_details_song = ''
+var_for_stop = {}
 
 async def find_song(file_path):
-    global details,current_details_song
+    global details,current_details_song,var_for_stop
     shazam = Shazam()
     out = await shazam.recognize(file_path)
     if out.get("track"):
@@ -32,9 +34,11 @@ async def find_song(file_path):
             os.remove(file_path)
         return out  
     else:
+        if var_for_stop:
+            adding_stop_time()
         return None
     
-    
+
 # Configure the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -54,6 +58,9 @@ class SongData(db.Model):
     bg_image = db.Column(db.Text)
     shazam_link = db.Column(db.Text)
     raw_data = db.Column(db.Text)
+    start_time = db.Column(db.DateTime)
+    end_time = db.Column(db.DateTime)
+    duration = db.Column(db.Integer)
     
     # Define a relationship to the MusicRepeatedDetails table
     details = relationship('MusicRepeatedDetails', backref='song_data', lazy=True)
@@ -105,7 +112,6 @@ def save_to_csv_and_database(title, artist, details):
     song_played = 1
     # Get the current timestamp as a datetime object
     timestamp = datetime.now()
-
     add_song = SongData(
         title=title,
         sub_title=sub_title,
@@ -117,7 +123,8 @@ def save_to_csv_and_database(title, artist, details):
         raw_data=raw_data_json,
         unique_international_code=unique_international_code,
         song_played=song_played,
-        timestamp=timestamp
+        timestamp=timestamp,
+        start_time=timestamp
     )    
     
     # check in songdata table if the song is there or not
@@ -143,14 +150,32 @@ def save_to_csv_and_database(title, artist, details):
     db.session.add(add_song)
     db.session.add(add_repeated_music)
     db.session.commit()
-
+    
+    session['current_song_id'] = add_song.id
+    session['unique_international_code'] = add_song.unique_international_code
+    var_for_stop = {
+        'id' :add_song.id,
+        'unique_international_code' :add_song.unique_international_code
+    }
     with open('static/song_history.csv', mode='a', newline='') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow([unique_international_code, timestamp, title, sub_title, artist,song_played,  album_title_single, released_year_single,bg_image, shazam_link, raw_data_json])
 
+def adding_stop_time():
+    global var_for_stop
+    toBeUpdateSong = SongData.query.get(var_for_stop['id'])
+    if toBeUpdateSong:
+        latest_time = datetime.now()
+        duration = (latest_time - toBeUpdateSong.start_time).seconds
+        
+        toBeUpdateSong.end_time = latest_time 
+        toBeUpdateSong.duration = duration
+        db.session.commit()    
+    var_for_stop = {}
 
 @app.route('/')
 def index():
+    session['username']    = 'saurav testing session'
     return render_template('index.html')
 
 @app.route('/recorder')
@@ -225,6 +250,60 @@ def top_3():
     ]
     return jsonify(top_songs)
 
+@app.route('/details_table', methods=['GET'])
+def details_table():
+    recent_songs_table = SongData.query.order_by(SongData.timestamp.desc()).limit(10).all()
+    songs = [
+        {
+            'title': song.title,
+            'artist': song.sub_title,
+            'bg_image': song.bg_image,
+            'shazam_link': song.shazam_link,
+            'timestamp': song.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'date': song.timestamp.strftime('%Y-%m-%d'),
+            'start_time': song.start_time.strftime('%H:%M:%S')  if song.start_time else ' - '  ,
+            'end_time': song.end_time.strftime('%H:%M:%S')  if song.end_time else ' - '  ,
+            'duration': song.duration,
+        } for song in recent_songs_table
+    ]
+    return jsonify(songs)
+
+@app.route('/download_csv')
+def download_csv():
+    songs = SongData.query.all()
+    # Use StringIO to write CSV content in memory
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    writer.writerow(['ID', 'Unique International Code', 'Title', 'Subtitle', 'Artist', 'Album Title', 'Released Year', 'Song Played', 'Timestamp', 'Start Time','End Time', 'Duration' 'Background Image', 'Shazam Link'])
+
+    # Write the data for each song
+    for song in songs:
+        writer.writerow([
+            song.id,
+            song.unique_international_code,
+            song.title,
+            song.sub_title,
+            song.artist,
+            song.album_title,
+            song.released_year,
+            song.song_played,
+            song.timestamp.strftime('%Y-%m-%d %H:%M:%S') if song.timestamp else '',
+            song.start_time.strftime('%Y-%m-%d %H:%M:%S') if song.start_time else '',
+            song.end_time.strftime('%Y-%m-%d %H:%M:%S') if song.end_time else '',
+            song.duration,
+            song.shazam_link
+        ])
+    
+    # Move back to the start of the StringIO object
+    output.seek(0)
+    
+    return Response(
+        output,
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=data.csv"}
+    )
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',ssl_context = 'adhoc')
+    app.run(host='0.0.0.0', debug = 'true',ssl_context = 'adhoc')
