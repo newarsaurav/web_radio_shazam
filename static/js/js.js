@@ -100,7 +100,7 @@ function fetchdetailTable() {
 
 $(document).ready(function () {
     // fetchdetailTable();  
-    setInterval(fetchdetailTable(), 5000);
+    setInterval(fetchdetailTable(), 2000);
 });
 
 

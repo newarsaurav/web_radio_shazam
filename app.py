@@ -23,7 +23,7 @@ current_details_song = ''
 var_for_stop = {}
 
 async def find_song(file_path):
-    global details,current_details_song,var_for_stop
+    global details,current_details_song
     shazam = Shazam()
     out = await shazam.recognize(file_path)
     if out.get("track"):
@@ -34,7 +34,7 @@ async def find_song(file_path):
             os.remove(file_path)
         return out  
     else:
-        if var_for_stop:
+        if session:
             adding_stop_time()
         return None
     
@@ -151,19 +151,33 @@ def save_to_csv_and_database(title, artist, details):
     db.session.add(add_repeated_music)
     db.session.commit()
     
+    if session :
+        if session['current_song_id'] != add_song.id :
+            session['previous_adding_the_stop_time'] = True
+            session['previous_song_id'] = session['current_song_id']
+            adding_stop_time()
     session['current_song_id'] = add_song.id
     session['unique_international_code'] = add_song.unique_international_code
-    var_for_stop = {
-        'id' :add_song.id,
-        'unique_international_code' :add_song.unique_international_code
-    }
+
     with open('static/song_history.csv', mode='a', newline='') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow([unique_international_code, timestamp, title, sub_title, artist,song_played,  album_title_single, released_year_single,bg_image, shazam_link, raw_data_json])
 
 def adding_stop_time():
-    global var_for_stop
-    toBeUpdateSong = SongData.query.get(var_for_stop['id'])
+    print('adding-stop-time')
+    print('----'*10)
+    if session:
+        if session.get('previous_adding_the_stop_time'):
+            updating_stop_time(session['previous_song_id'])
+            session.pop('previous_adding_the_stop_time' , None)
+            session.pop('previous_song_id' , None)
+            
+        else:  
+            updating_stop_time(session['current_song_id'])               
+            session.clear()
+
+def updating_stop_time(user_id):
+    toBeUpdateSong = SongData.query.get(user_id)
     if toBeUpdateSong:
         latest_time = datetime.now()
         duration = (latest_time - toBeUpdateSong.start_time).seconds
@@ -171,11 +185,9 @@ def adding_stop_time():
         toBeUpdateSong.end_time = latest_time 
         toBeUpdateSong.duration = duration
         db.session.commit()    
-    var_for_stop = {}
 
 @app.route('/')
 def index():
-    session['username']    = 'saurav testing session'
     return render_template('index.html')
 
 @app.route('/recorder')
@@ -189,10 +201,10 @@ def upload():
         # file.save(r'static/upload_partial_wav' + file.filename)  
         file_path = os.path.join('static', 'upload_partial_wav', file.filename)
         file.save(file_path)  
-        # file.save(r'static/upload_partial_wav' + file.filename)  
-        print(f"received at{time.time()}")
+        
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        
         data = loop.run_until_complete(find_song(file_path))
         if data:
             return jsonify(data)
@@ -263,11 +275,16 @@ def details_table():
             'date': song.timestamp.strftime('%Y-%m-%d'),
             'start_time': song.start_time.strftime('%H:%M:%S')  if song.start_time else ' - '  ,
             'end_time': song.end_time.strftime('%H:%M:%S')  if song.end_time else ' - '  ,
-            'duration': song.duration,
+            'duration': format_duration(song.duration) if song.duration else ' - '
         } for song in recent_songs_table
     ]
     return jsonify(songs)
 
+
+def format_duration(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f'{hours:02}:{minutes:02}:{seconds:02}'
 @app.route('/download_csv')
 def download_csv():
     songs = SongData.query.all()
@@ -307,3 +324,4 @@ def download_csv():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug = 'true',ssl_context = 'adhoc')
+    # app.run(host='0.0.0.0', debug = 'true')
